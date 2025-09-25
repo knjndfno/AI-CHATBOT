@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gemini Designer Chatbot</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    #chat {
+      width: 600px;
+      max-width: 100%;
+      border: 1px solid #444;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #1e1e1e;
+    }
+
+    .message {
+      margin: 1rem 0;
+    }
+
+    .user {
+      text-align: right;
+      color: #8ab4f8;
+    }
+
+    .bot {
+      text-align: left;
+      color: #9ae69a;
+      white-space: pre-wrap;
+    }
+
+    #inputArea {
+      margin-top: 1rem;
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 1rem;
+      background: #8ab4f8;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #5b8ff0;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <!-- Chat messages will appear here -->
+  </div>
+
+  <div id="inputArea">
+    <input type="text" id="userInput" placeholder="Ask something..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyCnsE6qqYu05LRVTtB7omgeE-dnP6-Mwg8"; // Replace with your Gemini API key
+    const chatBox = document.getElementById('chat');
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Show user message
+      addMessage('user', text);
+      input.value = '';
+
+      // Fetch Gemini response
+      const responseText = await fetchGeminiResponse(text);
+      // Typing effect
+      await typeMessage('bot', responseText);
+    }
+
+    function addMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function typeMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      for (let i = 0; i < text.length; i++) {
+        div.textContent += text[i];
+        chatBox.scrollTop = chatBox.scrollHeight;
+        await new Promise(r => setTimeout(r, 20)); // Typing speed
+      }
+    }
+
+    async function fetchGeminiResponse(promptText) {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + API_KEY;
+
+      const body = {
+        contents: [
+          {
+            parts: [{ text: promptText }]
+          }
+        ]
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || '[No response]';
+      } catch (error) {
+        console.error(error);
+        return '[Error fetching response]';
+      }
+    }
+  </script>
+</body>
+</html>
